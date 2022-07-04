@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/liamcervante/terraform-provider-fakelocal/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -15,12 +17,7 @@ var _ tfsdk.Provider = &provider{}
 // provider satisfies the tfsdk.Provider interface and usually is included
 // with all Resource and DataSource implementations.
 type provider struct {
-	// client can contain the upstream provider SDK or HTTP client used to
-	// communicate with the upstream service. Resource and DataSource
-	// implementations can then make calls using this client.
-	//
-	// TODO: If appropriate, implement upstream provider SDK or HTTP client.
-	// client vendorsdk.ExampleClient
+	client client.Local
 
 	// configured is set to true at the end of the Configure method.
 	// This can be used in Resource and DataSource implementations to verify
@@ -33,12 +30,14 @@ type provider struct {
 	version string
 }
 
-// providerData can be used to store data from the Terraform configuration.
+// providerData can be used to store client from the Terraform configuration.
 type providerData struct {
-	Example types.String `tfsdk:"example"`
+	ResourceDir types.String `tfsdk:"resource_dir"`
+	DataDir     types.String `tfsdk:"data_dir"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
+	tflog.Trace(ctx, "provider.Configure")
 	var data providerData
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -47,34 +46,48 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		return
 	}
 
-	// Configuration values are now available.
-	// if data.Example.Null { /* ... */ }
+	p.client = client.Local{}
 
-	// If the upstream provider SDK or HTTP client requires configuration, such
-	// as authentication or logging, this is a great opportunity to do so.
+	if data.ResourceDir.Null {
+		p.client.ResourceDirectory = "terraform.resource"
+	} else {
+		p.client.ResourceDirectory = data.ResourceDir.Value
+	}
+
+	if data.DataDir.Null {
+		p.client.DataDirectory = "terraform.data"
+	} else {
+		p.client.DataDirectory = data.DataDir.Value
+	}
 
 	p.configured = true
 }
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
+	tflog.Trace(ctx, "provider.GetResources")
 	return map[string]tfsdk.ResourceType{
-		"scaffolding_example": exampleResourceType{},
+		"complex_resource": complexResourceType{},
 	}, nil
 }
 
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
+	tflog.Trace(ctx, "provider.GetDataSources")
 	return map[string]tfsdk.DataSourceType{
-		"scaffolding_example": exampleDataSourceType{},
+		"complex_resource": complexDataSourceType{},
 	}, nil
 }
 
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	tflog.Trace(ctx, "provider.GetSchema")
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"example": {
-				MarkdownDescription: "Example provider attribute",
-				Optional:            true,
-				Type:                types.StringType,
+			"resource_dir": {
+				Optional: true,
+				Type:     types.StringType,
+			},
+			"data_dir": {
+				Optional: true,
+				Type:     types.StringType,
 			},
 		},
 	}, nil

@@ -66,14 +66,14 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	tflog.Trace(ctx, "provider.GetResources")
 	return map[string]tfsdk.ResourceType{
-		"complex_resource": complexResourceType{},
+		"fakelocal_complex_resource": complexResourceType{},
 	}, nil
 }
 
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
 	tflog.Trace(ctx, "provider.GetDataSources")
 	return map[string]tfsdk.DataSourceType{
-		"complex_resource": complexDataSourceType{},
+		"fakelocal_complex_resource": complexDataSourceType{},
 	}, nil
 }
 

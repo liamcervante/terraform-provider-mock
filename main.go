@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"log"
 
@@ -31,7 +30,6 @@ var (
 )
 
 func main() {
-	fmt.Printf("Looooook at meeeee")
 	var debug bool
 
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
@@ -48,7 +46,6 @@ func main() {
 	err := providerserver.Serve(ctx, provider.New(version), opts)
 
 	if err != nil {
-		fmt.Printf(err.Error())
 		log.Fatal(err.Error())
 	}
 }

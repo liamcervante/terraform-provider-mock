@@ -1,6 +1,5 @@
 provider "fakelocal" {}
 
-resource "complex_resource" "test" {
-  provider = fakelocal
+resource "fakelocal_complex_resource" "test" {
   bool = false
 }

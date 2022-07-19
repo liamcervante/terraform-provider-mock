@@ -12,11 +12,11 @@ func TestAccComplexResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: LoadFile(t, "testdata/complex/create.tf"),
-				Check:  resource.TestCheckResourceAttr("complex_resource.test", "bool", "true"),
+				Check:  resource.TestCheckResourceAttr("fakelocal_complex_resource.test", "bool", "true"),
 			},
 			{
 				Config: LoadFile(t, "testdata/complex/update.tf"),
-				Check:  resource.TestCheckResourceAttr("complex_resource.test", "bool", "false"),
+				Check:  resource.TestCheckResourceAttr("fakelocal_complex_resource.test", "bool", "false"),
 			},
 			{
 				Config: LoadFile(t, "testdata/complex/delete.tf"),

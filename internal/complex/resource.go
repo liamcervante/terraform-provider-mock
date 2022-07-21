@@ -1,12 +1,14 @@
-package client
+package complex
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/liamcervante/terraform-provider-fakelocal/internal/client"
 )
 
 var (
-	ComplexAttributes = map[string]tfsdk.Attribute{
+	Attributes = map[string]tfsdk.Attribute{
 		"id": {
 			Computed: true,
 			PlanModifiers: tfsdk.AttributePlanModifiers{
@@ -37,7 +39,7 @@ var (
 	}
 )
 
-type Complex struct {
+type Resource struct {
 	Id types.String `tfsdk:"id" json:"id"`
 
 	Boolean types.Bool    `tfsdk:"bool" json:"bool"`
@@ -47,14 +49,14 @@ type Complex struct {
 	Integer types.Int64   `tfsdk:"integer" json:"integer"`
 }
 
-func (c *Complex) GetId() string {
-	return c.Id.Value
+func (r *Resource) GetId() string {
+	return r.Id.Value
 }
 
-func (c *Complex) SetId(id string) {
-	c.Id = types.String{Value: id}
+func (r *Resource) SetId(id string) {
+	r.Id = types.String{Value: id}
 }
 
-func NewComplex() Data {
-	return &Complex{}
+func New() client.Data {
+	return &Resource{}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
 )
 
 var _ tfsdk.Resource = Resource{}
@@ -18,6 +19,8 @@ type Resource struct {
 
 func (r Resource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
 	data := r.CreateResource()
+
+	types.CreateRootType(req.Config.Schema)
 
 	diags := req.Config.Get(ctx, data)
 	resp.Diagnostics.Append(diags...)

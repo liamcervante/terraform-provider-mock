@@ -29,12 +29,19 @@ type provider struct {
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
 	version string
+
+	// dynamicTypes is a representation of any dynamic types we should include
+	// in the providers set of supported resources.
+	//
+	// Currently, the only supported format here is JSON.
+	dynamicTypes string
 }
 
 // providerData can be used to store client from the Terraform configuration.
 type providerData struct {
-	ResourceDir types.String `tfsdk:"resource_dir"`
-	DataDir     types.String `tfsdk:"data_dir"`
+	ResourceDir  types.String `tfsdk:"resource_dir"`
+	DataDir      types.String `tfsdk:"data_dir"`
+	DynamicTypes types.String `tfsdk:"dynamic_types"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
@@ -61,11 +68,16 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		p.client.DataDirectory = data.DataDir.Value
 	}
 
+	if !data.DynamicTypes.Null {
+		p.dynamicTypes = data.DynamicTypes.Value
+	}
+
 	p.configured = true
 }
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
 	tflog.Trace(ctx, "provider.GetResources")
+
 	return map[string]tfsdk.ResourceType{
 		"fakelocal_complex_resource": complexResourceType{},
 	}, nil
@@ -87,6 +99,10 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 				Type:     types.StringType,
 			},
 			"data_dir": {
+				Optional: true,
+				Type:     types.StringType,
+			},
+			"dynamic_types": {
 				Optional: true,
 				Type:     types.StringType,
 			},

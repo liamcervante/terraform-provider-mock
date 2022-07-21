@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/liamcervante/terraform-provider-fakelocal/internal/client"
+	"github.com/liamcervante/terraform-provider-fakelocal/internal/complex"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -14,7 +15,7 @@ type complexDataSourceType struct{}
 
 func (t complexDataSourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
-		Attributes: client.ComplexAttributes,
+		Attributes: complex.Attributes,
 	}, nil
 }
 
@@ -23,6 +24,6 @@ func (t complexDataSourceType) NewDataSource(ctx context.Context, in tfsdk.Provi
 
 	return client.DataSource{
 		Client:         provider.client,
-		CreateResource: client.NewComplex,
+		CreateResource: complex.New,
 	}, diags
 }

@@ -23,7 +23,6 @@ func (t complexDataSourceType) NewDataSource(ctx context.Context, in tfsdk.Provi
 	provider, diags := convertProviderType(in)
 
 	return client.DataSource{
-		Client:         provider.client,
-		CreateResource: complex.New,
+		Client: provider.client,
 	}, diags
 }

@@ -1,11 +1,5 @@
 package types
 
-import (
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-)
-
 const (
 	Boolean string = "boolean"
 	Float   string = "float"
@@ -18,33 +12,6 @@ const (
 	Object string = "type"
 	Set    string = "set"
 )
-
-func Test(interface{}) Type {
-
-}
-
-func GetType(t attr.Type) Type {
-
-	attribute := tfsdk.Attribute{
-		Type: types.BoolType,
-	}
-
-	b := types.BoolType
-
-	t.(types.BoolType)
-
-	switch target := t.(type) {
-	case attr.Type(types.BoolType):
-		return PrimitiveType{
-			Type: Boolean,
-		}
-	case types.MapType:
-		return MapType{
-			Type: GetType(target.ElemType),
-		}
-	case types.ObjectType
-	}
-}
 
 type Type interface {
 	String() string

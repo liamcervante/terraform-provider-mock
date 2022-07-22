@@ -1,16 +1,16 @@
 package values
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
 )
 
 var _ tftypes.ValueConverter = Map{}
 var _ tftypes.ValueCreator = Map{}
 
 type Map struct {
-	Type   types.Type       `json:"type"`
-	Values map[string]Value `json:"values"`
+	Type   attr.Type        `tfsdk:"type" json:"type"`
+	Values map[string]Value `tfsdk:"values" json:"values"`
 }
 
 func (m Map) ToTerraform5Value() (interface{}, error) {
@@ -32,11 +32,7 @@ func (m Map) FromTerraform5Value(value tftypes.Value) error {
 	}
 
 	for name, child := range children {
-		parsed, err := ValueForType(m.Type)
-		if err != nil {
-			return err
-		}
-
+		parsed := ValueForType(m.Type)
 		if err := parsed.FromTerraform5Value(child); err != nil {
 			return err
 		}

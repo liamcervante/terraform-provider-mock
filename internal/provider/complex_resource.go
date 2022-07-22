@@ -24,7 +24,6 @@ func (t complexResourceType) NewResource(ctx context.Context, in tfsdk.Provider)
 	provider, diags := convertProviderType(in)
 
 	return client.Resource{
-		Client:         provider.client,
-		CreateResource: complex.New,
+		Client: provider.client,
 	}, diags
 }

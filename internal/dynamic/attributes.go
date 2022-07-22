@@ -2,6 +2,7 @@ package dynamic
 
 import (
 	"errors"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 
 	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
 
@@ -139,6 +140,36 @@ func (o Object) ToTerraformAttribute() (map[string]tfsdk.Attribute, error) {
 		attributes[name] = tfAttribute
 	}
 	return attributes, nil
+}
+
+func (o Object) ToTerraformSchema() (tfsdk.Schema, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if _, ok := o.Attributes["id"]; ok {
+		diags.AddError(
+			"Found `id` value in top level object",
+			"Top level dynamic objects cannot define a value called `id` as the provider will generate an ID for them.",
+		)
+
+		return tfsdk.Schema{}, diags
+	}
+
+	attributes, err := o.ToTerraformAttribute()
+	if err != nil {
+		diags.AddError("Failed to parse dynamic attributes", err.Error())
+	}
+
+	attributes["id"] = tfsdk.Attribute{
+		Computed: true,
+		PlanModifiers: tfsdk.AttributePlanModifiers{
+			tfsdk.UseStateForUnknown(),
+		},
+		Type: tftypes.StringType,
+	}
+
+	return tfsdk.Schema{
+		Attributes: attributes,
+	}, diags
 }
 
 func (s Set) ToTerraformAttribute() (tfsdk.Attribute, error) {

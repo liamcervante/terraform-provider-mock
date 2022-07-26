@@ -1,0 +1,5 @@
+provider "fakelocal" {}
+
+resource "fakelocal_dynamic_resource" "test" {
+  integer = 1
+}

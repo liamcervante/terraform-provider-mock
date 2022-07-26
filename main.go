@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+
 	"github.com/liamcervante/terraform-provider-fakelocal/internal/provider"
 )
 

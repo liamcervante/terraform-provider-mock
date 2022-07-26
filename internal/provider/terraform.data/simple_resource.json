@@ -1,0 +1,30 @@
+{
+  "types": {
+    "bool": {
+      "type": "boolean"
+    },
+    "float": {
+      "type": "number"
+    },
+    "id": {
+      "type": "string"
+    },
+    "integer": {
+      "type": "number"
+    },
+    "number": {
+      "type": "number"
+    },
+    "string": {
+      "type": "string"
+    }
+  },
+  "values": {
+    "id": {
+      "string": "simple_resource"
+    },
+    "integer": {
+      "number": "0"
+    }
+  }
+}

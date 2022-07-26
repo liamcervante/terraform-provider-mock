@@ -2,138 +2,260 @@ package values
 
 import (
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"math/big"
+
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"reflect"
+
+	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
 )
 
-var _ tftypes.ValueConverter = Value{}
-var _ tftypes.ValueCreator = Value{}
-
 type Value struct {
-	Type attr.Type `tfsdk:"type" json:"type"`
+	Boolean *bool      `tfsdk:"boolean" json:"boolean,omitempty"`
+	Number  *big.Float `tfsdk:"number" json:"number,omitempty"`
+	String  *string    `tfsdk:"string" json:"string,omitempty"`
 
-	Boolean bool    `tfsdk:"boolean" json:"boolean"`
-	Float   float64 `tfsdk:"boolean" json:"float"`
-	Integer int64   `tfsdk:"integer" json:"integer"`
-	Number  float64 `tfsdk:"number" json:"number"`
-	String  string  `tfsdk:"string" json:"string"`
-
-	List   List   `tfsdk:"list" json:"list"`
-	Map    Map    `tfsdk:"map" json:"map"`
-	Object Object `tfsdk:"object" json:"object"`
-	Set    Set    `tfsdk:"set" json:"set"`
+	List   []Value          `tfsdk:"list" json:"list,omitempty"`
+	Map    map[string]Value `tfsdk:"map" json:"map,omitempty"`
+	Object map[string]Value `tfsdk:"object" json:"object,omitempty"`
+	Set    []Value          `tfsdk:"set" json:"set,omitempty"`
 }
 
-func ValueForType(t attr.Type) Value {
-	switch target := t.(type) {
-	case types.ListType:
-		return Value{
-			Type: target,
-			List: List{
-				Type:   target.ElemType,
-				Values: []Value{},
-			},
-		}
-	case types.MapType:
-		return Value{
-			Type: target,
-			Map: Map{
-				Type:   target.ElemType,
-				Values: map[string]Value{},
-			},
-		}
-	case types.SetType:
-		return Value{
-			Type: target,
-			Set: Set{
-				Type:   target.ElemType,
-				Values: []Value{},
-			},
-		}
-	case types.ObjectType:
-		return Value{
-			Type: target,
-			Object: Object{
-				Types:  target.AttrTypes,
-				Values: map[string]Value{},
-			},
-		}
-	}
-
-	// Otherwise, just apply the type without extra special consideration.
-	return Value{Type: t}
-}
-
-func (v Value) SetId(id string) error {
-	switch target := v.Type.(type) {
-	case types.ObjectType:
-		v.Object.Values["id"] = Value{String: id}
-		v.Object.Types["id"] = types.StringType
-		return nil
-	default:
-		return errors.New("can only set the ID on an Object type as found: " + reflect.TypeOf(target).String())
-	}
-}
-
-func (v Value) GetId() (string, error) {
-	switch target := v.Type.(type) {
-	case types.ObjectType:
-		return v.Object.Values["id"].String, nil
-	default:
-		return "", errors.New("can only retrieve the ID on an Object type as found: " + reflect.TypeOf(target).String())
-	}
-}
-
-func (v Value) ToTerraform5Value() (interface{}, error) {
-	switch reflect.TypeOf(v.Type) {
-	case reflect.TypeOf(types.BoolType):
+func toTerraform5Value(v Value, t *types.Type) (tftypes.Value, error) {
+	switch t.Type {
+	case types.Boolean:
 		return tftypes.NewValue(tftypes.Bool, v.Boolean), nil
-	case reflect.TypeOf(types.Float64Type):
-		return tftypes.NewValue(tftypes.Number, v.Float), nil
-	case reflect.TypeOf(types.Int64Type):
-		return tftypes.NewValue(tftypes.Number, v.Integer), nil
-	case reflect.TypeOf(types.NumberType):
+	case types.Number, types.Integer, types.Float:
 		return tftypes.NewValue(tftypes.Number, v.Number), nil
-	case reflect.TypeOf(types.StringType):
+	case types.String:
 		return tftypes.NewValue(tftypes.String, v.String), nil
-	case reflect.TypeOf(types.ListType{}):
-		return v.List.ToTerraform5Value()
-	case reflect.TypeOf(types.MapType{}):
-		return v.Map.ToTerraform5Value()
-	case reflect.TypeOf(types.SetType{}):
-		return v.Set.ToTerraform5Value()
-	case reflect.TypeOf(types.ObjectType{}):
-		return v.Object.ToTerraform5Value()
+	case types.List:
+		value, typ, err := listToTerraform5Value(v.List, t)
+		if err != nil {
+			return tftypes.Value{}, err
+		}
+		return tftypes.NewValue(typ, value), nil
+	case types.Map:
+		value, typ, err := mapToTerraform5Value(v.Map, t)
+		if err != nil {
+			return tftypes.Value{}, err
+		}
+		return tftypes.NewValue(typ, value), nil
+	case types.Set:
+		value, typ, err := setToTerraform5Value(v.Set, t)
+		if err != nil {
+			return tftypes.Value{}, err
+		}
+		return tftypes.NewValue(typ, value), nil
+	case types.Object:
+		value, typ, err := objectToTerraform5Value(v.Object, t)
+		if err != nil {
+			return tftypes.Value{}, err
+		}
+		return tftypes.NewValue(typ, value), nil
 	default:
-		return tfsdk.Attribute{}, errors.New("unrecognized type: " + v.Type.String())
+		return tftypes.Value{}, errors.New("unrecognized type: " + t.Type)
 	}
 }
 
-func (v Value) FromTerraform5Value(value tftypes.Value) error {
-	value.Type()
-	switch reflect.TypeOf(v.Type) {
-	case reflect.TypeOf(types.BoolType):
-		return value.As(&v.Boolean)
-	case reflect.TypeOf(types.Float64Type):
-		return value.As(&v.Float)
-	case reflect.TypeOf(types.Int64Type):
-		return value.As(&v.Integer)
-	case reflect.TypeOf(types.NumberType):
-		return value.As(&v.Number)
-	case reflect.TypeOf(types.StringType):
-		return value.As(&v.String)
-	case reflect.TypeOf(types.ListType{}):
-		return v.List.FromTerraform5Value(value)
-	case reflect.TypeOf(types.MapType{}):
-		return v.Map.FromTerraform5Value(value)
-	case reflect.TypeOf(types.SetType{}):
-		return v.Set.FromTerraform5Value(value)
-	case reflect.TypeOf(types.ObjectType{}):
-		return v.Object.FromTerraform5Value(value)
-	default:
-		return errors.New("unrecognized type: " + v.Type.String())
+func fromTerraform5Value(value tftypes.Value) (*Value, error) {
+	if value.IsNull() {
+		return nil, nil
 	}
+
+	typ := value.Type()
+	switch {
+	case typ.Is(tftypes.Bool):
+		values := Value{}
+		err := value.As(&values.Boolean)
+		return &values, err
+	case typ.Is(tftypes.Number):
+		values := Value{}
+		err := value.As(&values.Number)
+		return &values, err
+	case typ.Is(tftypes.String):
+		values := Value{}
+		err := value.As(&values.String)
+		return &values, err
+	case typ.Is(tftypes.List{}):
+		return listFromTerraform5Value(value)
+	case typ.Is(tftypes.Map{}):
+		return mapFromTerraform5Value(value)
+	case typ.Is(tftypes.Set{}):
+		return setFromTerraform5Value(value)
+	case typ.Is(tftypes.Object{}):
+		return objectFromTerraform5Value(value)
+	default:
+		return nil, errors.New("unrecognized type: " + typ.String())
+	}
+}
+
+func listToTerraform5Value(v []Value, t *types.Type) (interface{}, tftypes.Type, error) {
+	tfType, err := t.ToTerraform5Type()
+	if err != nil {
+		return nil, tftypes.List{}, err
+	}
+
+	if v == nil {
+		return nil, tfType, nil
+	}
+
+	var children []tftypes.Value
+	for _, values := range v {
+		child, err := toTerraform5Value(values, t.ElementType)
+		if err != nil {
+			return children, tfType, err
+		}
+		children = append(children, child)
+	}
+
+	return children, tfType, nil
+}
+
+func listFromTerraform5Value(value tftypes.Value) (*Value, error) {
+	values := Value{}
+
+	var children []tftypes.Value
+	if err := value.As(&children); err != nil {
+		return nil, err
+	}
+
+	values.List = []Value{}
+	for _, child := range children {
+		parsed, err := fromTerraform5Value(child)
+		if err != nil {
+			return nil, err
+		}
+		values.List = append(values.List, *parsed)
+	}
+	return &values, nil
+}
+
+func mapToTerraform5Value(v map[string]Value, t *types.Type) (interface{}, tftypes.Type, error) {
+	tfType, err := t.ToTerraform5Type()
+	if err != nil {
+		return nil, tftypes.Map{}, err
+	}
+
+	if v == nil {
+		return nil, tfType, nil
+	}
+
+	children := make(map[string]tftypes.Value)
+	for name, values := range v {
+		child, err := toTerraform5Value(values, t.ElementType)
+		if err != nil {
+			return children, tfType, err
+		}
+		children[name] = child
+	}
+
+	return children, tfType, nil
+}
+
+func mapFromTerraform5Value(value tftypes.Value) (*Value, error) {
+	values := Value{}
+
+	var children map[string]tftypes.Value
+	if err := value.As(&children); err != nil {
+		return nil, err
+	}
+
+	values.Map = make(map[string]Value)
+
+	for name, child := range children {
+		parsed, err := fromTerraform5Value(child)
+		if err != nil {
+			return nil, err
+		}
+		values.Map[name] = *parsed
+	}
+	return &values, nil
+}
+
+func objectToTerraform5Value(v map[string]Value, t *types.Type) (interface{}, tftypes.Type, error) {
+	tfType, err := t.ToTerraform5Type()
+	if err != nil {
+		return nil, tftypes.Object{}, err
+	}
+
+	if v == nil {
+		return nil, tfType, nil
+	}
+
+	tfValues := make(map[string]tftypes.Value)
+	for name, typ := range t.ObjectType {
+		var err error
+		if value, ok := v[name]; ok {
+			if tfValues[name], err = toTerraform5Value(value, typ); err != nil {
+				return tfValues, tftypes.Object{}, err
+			}
+			continue
+		}
+
+		if tfValues[name], err = toTerraform5Value(Value{}, typ); err != nil {
+			return tfValues, tftypes.Object{}, err
+		}
+	}
+
+	return tfValues, tfType, nil
+}
+
+func objectFromTerraform5Value(value tftypes.Value) (*Value, error) {
+	values := Value{}
+	var children map[string]tftypes.Value
+	if err := value.As(&children); err != nil {
+		return nil, err
+	}
+
+	values.Object = make(map[string]Value)
+	for name, child := range children {
+		parsed, err := fromTerraform5Value(child)
+		if err != nil {
+			return nil, err
+		}
+		if parsed != nil {
+			values.Object[name] = *parsed
+		}
+	}
+	return &values, nil
+}
+
+func setToTerraform5Value(v []Value, t *types.Type) (interface{}, tftypes.Type, error) {
+	tfType, err := t.ToTerraform5Type()
+	if err != nil {
+		return nil, tftypes.Set{}, err
+	}
+
+	if v == nil {
+		return nil, tfType, nil
+	}
+
+	var children []tftypes.Value
+	for _, value := range v {
+		child, err := toTerraform5Value(value, t.ElementType)
+		if err != nil {
+			return children, tfType, err
+		}
+		children = append(children, child)
+	}
+
+	return children, tfType, nil
+}
+
+func setFromTerraform5Value(value tftypes.Value) (*Value, error) {
+	values := Value{}
+	var children []tftypes.Value
+	if err := value.As(&children); err != nil {
+		return nil, err
+	}
+
+	values.Set = []Value{}
+	for _, child := range children {
+		parsed, err := fromTerraform5Value(child)
+		if err != nil {
+			return nil, err
+		}
+		values.Set = append(values.Set, *parsed)
+	}
+	return &values, nil
 }

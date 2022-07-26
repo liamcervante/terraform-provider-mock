@@ -2,6 +2,7 @@ package dynamic
 
 import (
 	"errors"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 
 	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
@@ -15,26 +16,10 @@ type Attribute struct {
 	Type     string `json:"type"`
 	Optional bool   `json:"optional"`
 
-	List   *List   `json:"list"`
-	Map    *Map    `json:"map"`
-	Object *Object `json:"object"`
-	Set    *Set    `json:"set"`
-}
-
-type List struct {
-	Attribute Attribute `json:"attribute"`
-}
-
-type Map struct {
-	Attribute Attribute `json:"attribute"`
-}
-
-type Object struct {
-	Attributes map[string]Attribute `json:"attributes"`
-}
-
-type Set struct {
-	Attribute Attribute `json:"attribute"`
+	List   *Attribute           `json:"list,omitempty"`
+	Map    *Attribute           `json:"map,omitempty"`
+	Object map[string]Attribute `json:"object,omitempty"`
+	Set    *Attribute           `json:"set,omitempty"`
 }
 
 func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
@@ -42,26 +27,31 @@ func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
 	case types.Boolean:
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type:     tftypes.BoolType,
 		}, nil
 	case types.Float:
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type:     tftypes.Float64Type,
 		}, nil
 	case types.Integer:
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type:     tftypes.Int64Type,
 		}, nil
 	case types.Number:
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type:     tftypes.NumberType,
 		}, nil
 	case types.String:
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type:     tftypes.StringType,
 		}, nil
 	case types.List:
@@ -72,6 +62,7 @@ func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
 
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type: tftypes.ListType{
 				ElemType: attribute.Type,
 			},
@@ -84,6 +75,7 @@ func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
 
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type: tftypes.MapType{
 				ElemType: attribute.Type,
 			},
@@ -96,12 +88,13 @@ func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
 
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type: tftypes.SetType{
 				ElemType: attribute.Type,
 			},
 		}, nil
 	case types.Object:
-		attributes, err := a.Object.ToTerraformAttribute()
+		attributes, err := a.ObjectToTerraformAttribute()
 		if err != nil {
 			return tfsdk.Attribute{}, err
 		}
@@ -113,6 +106,7 @@ func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
 
 		return tfsdk.Attribute{
 			Optional: a.Optional,
+			Required: !a.Optional,
 			Type: tftypes.ObjectType{
 				AttrTypes: attrTypes,
 			},
@@ -122,17 +116,9 @@ func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
 	}
 }
 
-func (l List) ToTerraformAttribute() (tfsdk.Attribute, error) {
-	return l.Attribute.ToTerraformAttribute()
-}
-
-func (m Map) ToTerraformAttribute() (tfsdk.Attribute, error) {
-	return m.Attribute.ToTerraformAttribute()
-}
-
-func (o Object) ToTerraformAttribute() (map[string]tfsdk.Attribute, error) {
+func (a Attribute) ObjectToTerraformAttribute() (map[string]tfsdk.Attribute, error) {
 	attributes := make(map[string]tfsdk.Attribute)
-	for name, attribute := range o.Attributes {
+	for name, attribute := range a.Object {
 		tfAttribute, err := attribute.ToTerraformAttribute()
 		if err != nil {
 			return nil, err
@@ -142,10 +128,18 @@ func (o Object) ToTerraformAttribute() (map[string]tfsdk.Attribute, error) {
 	return attributes, nil
 }
 
-func (o Object) ToTerraformSchema() (tfsdk.Schema, diag.Diagnostics) {
+func (a Attribute) ToTerraformSchema(computed bool) (tfsdk.Schema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	if _, ok := o.Attributes["id"]; ok {
+	if a.Type != types.Object {
+		diags.AddError(
+			"Invalid attribute type",
+			"You can only turn objects into terraform schemas")
+
+		return tfsdk.Schema{}, diags
+	}
+
+	if _, ok := a.Object["id"]; ok {
 		diags.AddError(
 			"Found `id` value in top level object",
 			"Top level dynamic objects cannot define a value called `id` as the provider will generate an ID for them.",
@@ -154,15 +148,18 @@ func (o Object) ToTerraformSchema() (tfsdk.Schema, diag.Diagnostics) {
 		return tfsdk.Schema{}, diags
 	}
 
-	attributes, err := o.ToTerraformAttribute()
+	attributes, err := a.ObjectToTerraformAttribute()
 	if err != nil {
 		diags.AddError("Failed to parse dynamic attributes", err.Error())
 	}
 
 	attributes["id"] = tfsdk.Attribute{
-		Computed: true,
+		Required: !computed,
+		Optional: computed,
+		Computed: computed,
 		PlanModifiers: tfsdk.AttributePlanModifiers{
 			tfsdk.UseStateForUnknown(),
+			tfsdk.RequiresReplace(),
 		},
 		Type: tftypes.StringType,
 	}
@@ -170,8 +167,4 @@ func (o Object) ToTerraformSchema() (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: attributes,
 	}, diags
-}
-
-func (s Set) ToTerraformAttribute() (tfsdk.Attribute, error) {
-	return s.Attribute.ToTerraformAttribute()
 }

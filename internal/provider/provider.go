@@ -3,6 +3,9 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
+
+	"github.com/liamcervante/terraform-provider-fakelocal/internal/dynamic"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -30,18 +33,15 @@ type provider struct {
 	// testing.
 	version string
 
-	// dynamicTypes is a representation of any dynamic types we should include
-	// in the providers set of supported resources.
-	//
-	// Currently, the only supported format here is JSON.
-	dynamicTypes string
+	// reader will read the dynamic resource definitions in the GetResources and
+	// GetDataSources functions.
+	reader dynamic.Reader
 }
 
 // providerData can be used to store client from the Terraform configuration.
 type providerData struct {
-	ResourceDir  types.String `tfsdk:"resource_dir"`
-	DataDir      types.String `tfsdk:"data_dir"`
-	DynamicTypes types.String `tfsdk:"dynamic_types"`
+	ResourceDir types.String `tfsdk:"resource_directory"`
+	DataDir     types.String `tfsdk:"data_directory"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
@@ -61,48 +61,74 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	} else {
 		p.client.ResourceDirectory = data.ResourceDir.Value
 	}
+	ctx = tflog.With(ctx, "resource_directory", p.client.ResourceDirectory)
 
 	if data.DataDir.Null {
 		p.client.DataDirectory = "terraform.data"
 	} else {
 		p.client.DataDirectory = data.DataDir.Value
 	}
-
-	if !data.DynamicTypes.Null {
-		p.dynamicTypes = data.DynamicTypes.Value
-	}
+	ctx = tflog.With(ctx, "data_directory", p.client.DataDirectory)
 
 	p.configured = true
+	tflog.Trace(ctx, "provider.Configured = true")
 }
 
 func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
+	wd, _ := os.Getwd()
+	ctx = tflog.With(ctx, "working_directory", wd)
 	tflog.Trace(ctx, "provider.GetResources")
 
-	return map[string]tfsdk.ResourceType{
-		"fakelocal_complex_resource": complexResourceType{},
-	}, nil
+	dynamicResources, err := p.reader.Read()
+	if err != nil {
+		var diags diag.Diagnostics
+		diags.AddError("Failed to read dynamic resources", err.Error())
+		return nil, diags
+	}
+
+	resources := make(map[string]tfsdk.ResourceType)
+	for name, resource := range dynamicResources {
+		resources[name] = dynamicResourceType{resource}
+	}
+
+	resources["fakelocal_complex_resource"] = complexResourceType{}
+	resources["fakelocal_simple_resource"] = simpleResourceType{}
+
+	return resources, nil
 }
 
 func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
+	wd, _ := os.Getwd()
+	ctx = tflog.With(ctx, "working_directory", wd)
 	tflog.Trace(ctx, "provider.GetDataSources")
-	return map[string]tfsdk.DataSourceType{
-		"fakelocal_complex_resource": complexDataSourceType{},
-	}, nil
+
+	dynamicResources, err := p.reader.Read()
+	if err != nil {
+		var diags diag.Diagnostics
+		diags.AddError("Failed to read dynamic resources", err.Error())
+		return nil, diags
+	}
+
+	sources := make(map[string]tfsdk.DataSourceType)
+	for name, resource := range dynamicResources {
+		sources[name] = dynamicDataSourceType{resource}
+	}
+
+	sources["fakelocal_complex_resource"] = complexDataSourceType{}
+	sources["fakelocal_simple_resource"] = simpleDataSourceType{}
+
+	return sources, nil
 }
 
 func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	tflog.Trace(ctx, "provider.GetSchema")
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
-			"resource_dir": {
+			"resource_directory": {
 				Optional: true,
 				Type:     types.StringType,
 			},
-			"data_dir": {
-				Optional: true,
-				Type:     types.StringType,
-			},
-			"dynamic_types": {
+			"data_directory": {
 				Optional: true,
 				Type:     types.StringType,
 			},
@@ -114,6 +140,16 @@ func New(version string) func() tfsdk.Provider {
 	return func() tfsdk.Provider {
 		return &provider{
 			version: version,
+			reader:  dynamic.FileReader{File: "dynamic_resources.json"},
+		}
+	}
+}
+
+func NewForTesting(version string, resources string) func() tfsdk.Provider {
+	return func() tfsdk.Provider {
+		return &provider{
+			version: version,
+			reader:  dynamic.StringReader{Data: resources},
 		}
 	}
 }

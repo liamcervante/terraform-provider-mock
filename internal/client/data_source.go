@@ -2,9 +2,13 @@ package client
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/liamcervante/terraform-provider-fakelocal/internal/values"
 )
 
@@ -15,16 +19,18 @@ type DataSource struct {
 }
 
 func (d DataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
-	value := values.ValueForType(req.Config.Schema.AttributeType())
+	tflog.Trace(ctx, "DataSource.Read")
 
-	diags := req.Config.Get(ctx, &value)
+	resource := &values.Resource{}
+
+	diags := req.Config.Get(ctx, &resource)
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	id, err := value.GetId()
+	id, err := resource.GetId()
 	if err != nil {
 		resp.Diagnostics.Append(
 			diag.NewAttributeErrorDiagnostic(
@@ -32,13 +38,19 @@ func (d DataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, r
 				"failed to retrieve id", err.Error()))
 		return
 	}
+	ctx = tflog.With(ctx, "id", id)
 
-	readResponse := values.ValueForType(req.Config.Schema.AttributeType())
-	if err := d.Client.ReadResource(id, &readResponse); err != nil {
+	data, err := d.Client.ReadDataSource(ctx, id)
+	if err != nil {
 		resp.Diagnostics.Append(diag.NewErrorDiagnostic("read error", err.Error()))
 		return
 	}
 
-	diags = resp.State.Set(ctx, &readResponse)
+	if data == nil {
+		resp.Diagnostics.Append(diag.NewErrorDiagnostic("target data source does not exist", fmt.Sprintf("data source at %s could not be found in data directory (%s)", id, d.Client.DataDirectory)))
+		return
+	}
+
+	diags = resp.State.Set(ctx, data)
 	resp.Diagnostics.Append(diags...)
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/provider"
+	"github.com/liamcervante/terraform-provider-mock/internal/provider"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -38,7 +38,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "terraform.local/local/fakelocal",
+		Address: "terraform.local/local/mock",
 		Debug:   debug,
 	}
 

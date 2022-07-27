@@ -1,6 +1,6 @@
-provider "fakelocal" {}
+provider "mock" {}
 
-resource "fakelocal_dynamic_resource" "test" {
+resource "mock_dynamic_resource" "test" {
   integer = 0
 
   nested_list {

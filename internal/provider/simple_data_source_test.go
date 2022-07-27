@@ -13,7 +13,7 @@ func TestAccSimpleDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: LoadFile(t, "testdata/simple_datasource/get/main.tf"),
-				Check:  resource.TestCheckResourceAttr("data.fakelocal_simple_resource.test", "integer", "0"),
+				Check:  resource.TestCheckResourceAttr("data.mock_simple_resource.test", "integer", "0"),
 			},
 		},
 	})

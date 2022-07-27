@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/dynamic"
+	"github.com/liamcervante/terraform-provider-mock/internal/dynamic"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/client"
+	"github.com/liamcervante/terraform-provider-mock/internal/client"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces
@@ -91,8 +91,8 @@ func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceT
 		resources[name] = dynamicResourceType{resource}
 	}
 
-	resources["fakelocal_complex_resource"] = complexResourceType{}
-	resources["fakelocal_simple_resource"] = simpleResourceType{}
+	resources["mock_complex_resource"] = complexResourceType{}
+	resources["mock_simple_resource"] = simpleResourceType{}
 
 	return resources, nil
 }
@@ -114,8 +114,8 @@ func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSou
 		sources[name] = dynamicDataSourceType{resource}
 	}
 
-	sources["fakelocal_complex_resource"] = complexDataSourceType{}
-	sources["fakelocal_simple_resource"] = simpleDataSourceType{}
+	sources["mock_complex_resource"] = complexDataSourceType{}
+	sources["mock_simple_resource"] = simpleDataSourceType{}
 
 	return sources, nil
 }

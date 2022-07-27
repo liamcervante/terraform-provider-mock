@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
+	"github.com/liamcervante/terraform-provider-mock/internal/types"
 )
 
 func TestResource_Symmetry(t *testing.T) {
@@ -63,7 +63,7 @@ func TestResource_Symmetry(t *testing.T) {
 				},
 				Values: map[string]Value{
 					"list": {
-						List: []Value{},
+						List: &[]Value{},
 					},
 				},
 			},

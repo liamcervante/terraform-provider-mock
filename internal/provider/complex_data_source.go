@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/client"
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/complex"
+	"github.com/liamcervante/terraform-provider-mock/internal/client"
+	"github.com/liamcervante/terraform-provider-mock/internal/complex"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces

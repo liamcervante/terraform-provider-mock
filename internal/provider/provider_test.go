@@ -11,7 +11,7 @@ import (
 func ProviderFactories(resources string) map[string]func() (tfprotov6.ProviderServer, error) {
 	provider := NewForTesting("test", resources)()
 	return map[string]func() (tfprotov6.ProviderServer, error){
-		"fakelocal": providerserver.NewProtocol6WithError(provider),
+		"mock": providerserver.NewProtocol6WithError(provider),
 	}
 }
 

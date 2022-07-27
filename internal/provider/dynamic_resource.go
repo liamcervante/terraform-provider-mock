@@ -3,13 +3,13 @@ package provider
 import (
 	"context"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/client"
+	"github.com/liamcervante/terraform-provider-mock/internal/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/dynamic"
+	"github.com/liamcervante/terraform-provider-mock/internal/dynamic"
 )
 
 var _ tfsdk.ResourceType = dynamicResourceType{}

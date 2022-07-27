@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
+	"github.com/liamcervante/terraform-provider-mock/internal/types"
 )
 
 type Value struct {

@@ -13,11 +13,11 @@ func TestAccDynamicResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: LoadFile(t, "testdata/dynamic/create/main.tf"),
-				Check:  resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "integer", "0"),
+				Check:  resource.TestCheckResourceAttr("mock_dynamic_resource.test", "integer", "0"),
 			},
 			{
 				Config: LoadFile(t, "testdata/dynamic/update/main.tf"),
-				Check:  resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "integer", "1"),
+				Check:  resource.TestCheckResourceAttr("mock_dynamic_resource.test", "integer", "1"),
 			},
 			{
 				Config: LoadFile(t, "testdata/dynamic/delete/main.tf"),
@@ -34,17 +34,17 @@ func TestAccDynamicResourceWithBlocks(t *testing.T) {
 			{
 				Config: LoadFile(t, "testdata/dynamic_block/create/main.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "integer", "0"),
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "nested_list.#", "1"),
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "nested_list.0.integer", "0")),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "integer", "0"),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "nested_list.#", "1"),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "nested_list.0.integer", "0")),
 			},
 			{
 				Config: LoadFile(t, "testdata/dynamic_block/update/main.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "integer", "0"),
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "nested_list.#", "2"),
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "nested_list.0.integer", "0"),
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "nested_list.1.integer", "1")),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "integer", "0"),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "nested_list.#", "2"),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "nested_list.0.integer", "0"),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "nested_list.1.integer", "1")),
 			},
 			{
 				Config: LoadFile(t, "testdata/dynamic/delete/main.tf"),
@@ -61,14 +61,14 @@ func TestAccDynamicResourceWithId(t *testing.T) {
 			{
 				Config: LoadFile(t, "testdata/dynamic_with_id/create/main.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "integer", "0"),
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "id", "my_id")),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "integer", "0"),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "id", "my_id")),
 			},
 			{
 				Config: LoadFile(t, "testdata/dynamic_with_id/update/main.tf"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "integer", "1"),
-					resource.TestCheckResourceAttr("fakelocal_dynamic_resource.test", "id", "my_id")),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "integer", "1"),
+					resource.TestCheckResourceAttr("mock_dynamic_resource.test", "id", "my_id")),
 			},
 			{
 				Config: LoadFile(t, "testdata/dynamic/delete/main.tf"),

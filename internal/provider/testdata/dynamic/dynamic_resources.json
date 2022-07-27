@@ -1,5 +1,5 @@
 {
-  "fakelocal_dynamic_resource": {
+  "mock_dynamic_resource": {
     "attributes": {
       "integer": {
         "type": "integer",

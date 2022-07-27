@@ -1,5 +1,5 @@
-provider "fakelocal" {}
+provider "mock" {}
 
-resource "fakelocal_simple_resource" "test" {
+resource "mock_simple_resource" "test" {
   integer = 0
 }

@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/client"
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/simple"
+	"github.com/liamcervante/terraform-provider-mock/internal/client"
+	"github.com/liamcervante/terraform-provider-mock/internal/simple"
 )
 
 var _ tfsdk.DataSourceType = simpleDataSourceType{}

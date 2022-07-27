@@ -1,4 +1,4 @@
-module github.com/liamcervante/terraform-provider-fakelocal
+module github.com/liamcervante/terraform-provider-mock
 
 go 1.17
 

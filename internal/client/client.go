@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/values"
+	"github.com/liamcervante/terraform-provider-mock/internal/values"
 )
 
 type Local struct {

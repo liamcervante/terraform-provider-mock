@@ -1,1 +1,1 @@
-provider "fakelocal" {}
+provider "mock" {}

@@ -3,7 +3,7 @@ package dynamic
 import (
 	"errors"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
+	"github.com/liamcervante/terraform-provider-mock/internal/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	tftypes "github.com/hashicorp/terraform-plugin-framework/types"

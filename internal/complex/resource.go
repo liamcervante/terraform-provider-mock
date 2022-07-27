@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/liamcervante/terraform-provider-fakelocal/internal/simple"
+	"github.com/liamcervante/terraform-provider-mock/internal/simple"
 )
 
 func Attributes(maxDepth int) map[string]tfsdk.Attribute {

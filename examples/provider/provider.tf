@@ -1,3 +1,3 @@
-provider "fakelocal" {
+provider "mock" {
   # example configuration here
 }

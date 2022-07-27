@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-provider "fakelocal" {
+provider "mock" {
   # example configuration here
 }
 ```
@@ -23,5 +23,5 @@ provider "fakelocal" {
 
 ### Optional
 
-- `data_dir` (String)
-- `resource_dir` (String)
+- `data_directory` (String)
+- `resource_directory` (String)

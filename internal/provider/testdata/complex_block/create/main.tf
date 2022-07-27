@@ -1,6 +1,6 @@
-provider "fakelocal" {}
+provider "mock" {}
 
-resource "fakelocal_complex_resource" "test" {
+resource "mock_complex_resource" "test" {
   string = "hello"
 
   list_block {

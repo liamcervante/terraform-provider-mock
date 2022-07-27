@@ -12,13 +12,13 @@ import (
 )
 
 type dynamicDataSourceType struct {
-	Object dynamic.Attribute
+	Resource dynamic.Resource
 }
 
 func (d dynamicDataSourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	tflog.Trace(ctx, "dynamicDataSourceType.GetSchema")
 
-	return d.Object.ToTerraformSchema(false)
+	return d.Resource.ToTerraformSchema(false)
 }
 
 func (d dynamicDataSourceType) NewDataSource(ctx context.Context, in tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {

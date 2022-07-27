@@ -2,6 +2,7 @@ package values
 
 import (
 	"errors"
+
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
 	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
@@ -35,7 +36,11 @@ func (r Resource) Type() *types.Type {
 }
 
 func (r *Resource) ToTerraform5Value() (interface{}, error) {
-	value, _, err := objectToTerraform5Value(r.Values, r.Type())
+	value, _, err := objectToTerraform5Value(&r.Values, r.Type())
+
+	//fmt.Printf("ToTerraform5Value\n")
+	//fmt.Printf("FROM\n\t%v\n", toJSON(r.Values))
+	//fmt.Printf("TO\n\t%v\n\n", tftypes.NewValue(typ, value))
 	return value, err
 }
 
@@ -52,8 +57,20 @@ func (r *Resource) FromTerraform5Value(value tftypes.Value) error {
 		return err
 	}
 
-	r.Values = values.Object
+	r.Values = *values.Object
 	r.Types = typ.ObjectType
+
+	//fmt.Printf("FromTerraform5Value\n")
+	//fmt.Printf("FROM\n\t%v\n", value)
+	//fmt.Printf("TO\n\t%v\n\n", toJSON(r.Values))
 
 	return nil
 }
+
+//func toJSON(obj map[string]Value) string {
+//	data, err := json.Marshal(obj)
+//	if err != nil {
+//		panic(err)
+//	}
+//	return string(data)
+//}

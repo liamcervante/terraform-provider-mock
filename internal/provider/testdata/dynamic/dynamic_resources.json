@@ -1,0 +1,10 @@
+{
+  "fakelocal_dynamic_resource": {
+    "attributes": {
+      "integer": {
+        "type": "integer",
+        "optional": true
+      }
+    }
+  }
+}

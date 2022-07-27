@@ -1,0 +1,20 @@
+{
+  "fakelocal_dynamic_resource": {
+    "attributes": {
+      "integer": {
+        "type": "integer",
+        "optional": true
+      }
+    },
+    "blocks": {
+      "nested_list": {
+        "attributes": {
+          "integer": {
+            "type": "integer",
+            "optional": true
+          }
+        }
+      }
+    }
+  }
+}

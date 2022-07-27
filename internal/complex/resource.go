@@ -23,7 +23,7 @@ func Attributes(maxDepth int) map[string]tfsdk.Attribute {
 		attrs[name] = attribute
 	}
 
-	for name, attribute := range object(0, maxDepth) {
+	for name, attribute := range attributes(0, maxDepth) {
 		attrs[name] = attribute
 	}
 
@@ -31,7 +31,7 @@ func Attributes(maxDepth int) map[string]tfsdk.Attribute {
 }
 
 func Blocks(maxDepth int) map[string]tfsdk.Block {
-	return map[string]tfsdk.Block{} // blocks(0, maxDepth)
+	return blocks(0, maxDepth)
 }
 
 func blocks(depth, maxDepth int) map[string]tfsdk.Block {
@@ -42,13 +42,13 @@ func blocks(depth, maxDepth int) map[string]tfsdk.Block {
 	blks := make(map[string]tfsdk.Block)
 
 	blks["list_block"] = tfsdk.Block{
-		Attributes:  object(depth+1, maxDepth),
+		Attributes:  attributes(depth+1, maxDepth),
 		Blocks:      blocks(depth+1, maxDepth),
 		NestingMode: tfsdk.BlockNestingModeList,
 	}
 
 	blks["set_block"] = tfsdk.Block{
-		Attributes:  object(depth+1, maxDepth),
+		Attributes:  attributes(depth+1, maxDepth),
 		Blocks:      blocks(depth+1, maxDepth),
 		NestingMode: tfsdk.BlockNestingModeSet,
 	}
@@ -56,7 +56,7 @@ func blocks(depth, maxDepth int) map[string]tfsdk.Block {
 	return blks
 }
 
-func object(depth, maxDepth int) map[string]tfsdk.Attribute {
+func attributes(depth, maxDepth int) map[string]tfsdk.Attribute {
 	attrs := make(map[string]tfsdk.Attribute)
 
 	for name, attribute := range simple.CoreAttributes {
@@ -66,19 +66,19 @@ func object(depth, maxDepth int) map[string]tfsdk.Attribute {
 	if depth < maxDepth {
 		attrs["list"] = tfsdk.Attribute{
 			Optional:   true,
-			Attributes: tfsdk.ListNestedAttributes(object(depth+1, maxDepth)),
+			Attributes: tfsdk.ListNestedAttributes(attributes(depth+1, maxDepth)),
 		}
 		attrs["map"] = tfsdk.Attribute{
 			Optional:   true,
-			Attributes: tfsdk.MapNestedAttributes(object(depth+1, maxDepth)),
+			Attributes: tfsdk.MapNestedAttributes(attributes(depth+1, maxDepth)),
 		}
 		attrs["object"] = tfsdk.Attribute{
 			Optional:   true,
-			Attributes: tfsdk.SingleNestedAttributes(object(depth+1, maxDepth)),
+			Attributes: tfsdk.SingleNestedAttributes(attributes(depth+1, maxDepth)),
 		}
 		attrs["set"] = tfsdk.Attribute{
 			Optional:   true,
-			Attributes: tfsdk.SetNestedAttributes(object(depth+1, maxDepth)),
+			Attributes: tfsdk.SetNestedAttributes(attributes(depth+1, maxDepth)),
 		}
 	}
 

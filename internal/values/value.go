@@ -14,10 +14,10 @@ type Value struct {
 	Number  *big.Float `tfsdk:"number" json:"number,omitempty"`
 	String  *string    `tfsdk:"string" json:"string,omitempty"`
 
-	List   []Value          `tfsdk:"list" json:"list,omitempty"`
-	Map    map[string]Value `tfsdk:"map" json:"map,omitempty"`
-	Object map[string]Value `tfsdk:"object" json:"object,omitempty"`
-	Set    []Value          `tfsdk:"set" json:"set,omitempty"`
+	List   *[]Value          `tfsdk:"list" json:"list,omitempty"`
+	Map    *map[string]Value `tfsdk:"map" json:"map,omitempty"`
+	Object *map[string]Value `tfsdk:"object" json:"object,omitempty"`
+	Set    *[]Value          `tfsdk:"set" json:"set,omitempty"`
 }
 
 func toTerraform5Value(v Value, t *types.Type) (tftypes.Value, error) {
@@ -89,7 +89,7 @@ func fromTerraform5Value(value tftypes.Value) (*Value, error) {
 	}
 }
 
-func listToTerraform5Value(v []Value, t *types.Type) (interface{}, tftypes.Type, error) {
+func listToTerraform5Value(v *[]Value, t *types.Type) (interface{}, tftypes.Type, error) {
 	tfType, err := t.ToTerraform5Type()
 	if err != nil {
 		return nil, tftypes.List{}, err
@@ -100,7 +100,7 @@ func listToTerraform5Value(v []Value, t *types.Type) (interface{}, tftypes.Type,
 	}
 
 	var children []tftypes.Value
-	for _, values := range v {
+	for _, values := range *v {
 		child, err := toTerraform5Value(values, t.ElementType)
 		if err != nil {
 			return children, tfType, err
@@ -119,18 +119,20 @@ func listFromTerraform5Value(value tftypes.Value) (*Value, error) {
 		return nil, err
 	}
 
-	values.List = []Value{}
+	list := []Value{}
 	for _, child := range children {
 		parsed, err := fromTerraform5Value(child)
 		if err != nil {
 			return nil, err
 		}
-		values.List = append(values.List, *parsed)
+		list = append(list, *parsed)
 	}
+
+	values.List = &list
 	return &values, nil
 }
 
-func mapToTerraform5Value(v map[string]Value, t *types.Type) (interface{}, tftypes.Type, error) {
+func mapToTerraform5Value(v *map[string]Value, t *types.Type) (interface{}, tftypes.Type, error) {
 	tfType, err := t.ToTerraform5Type()
 	if err != nil {
 		return nil, tftypes.Map{}, err
@@ -141,7 +143,7 @@ func mapToTerraform5Value(v map[string]Value, t *types.Type) (interface{}, tftyp
 	}
 
 	children := make(map[string]tftypes.Value)
-	for name, values := range v {
+	for name, values := range *v {
 		child, err := toTerraform5Value(values, t.ElementType)
 		if err != nil {
 			return children, tfType, err
@@ -160,19 +162,19 @@ func mapFromTerraform5Value(value tftypes.Value) (*Value, error) {
 		return nil, err
 	}
 
-	values.Map = make(map[string]Value)
-
+	mapValues := make(map[string]Value)
 	for name, child := range children {
 		parsed, err := fromTerraform5Value(child)
 		if err != nil {
 			return nil, err
 		}
-		values.Map[name] = *parsed
+		mapValues[name] = *parsed
 	}
+	values.Map = &mapValues
 	return &values, nil
 }
 
-func objectToTerraform5Value(v map[string]Value, t *types.Type) (interface{}, tftypes.Type, error) {
+func objectToTerraform5Value(v *map[string]Value, t *types.Type) (interface{}, tftypes.Type, error) {
 	tfType, err := t.ToTerraform5Type()
 	if err != nil {
 		return nil, tftypes.Object{}, err
@@ -185,7 +187,7 @@ func objectToTerraform5Value(v map[string]Value, t *types.Type) (interface{}, tf
 	tfValues := make(map[string]tftypes.Value)
 	for name, typ := range t.ObjectType {
 		var err error
-		if value, ok := v[name]; ok {
+		if value, ok := (*v)[name]; ok {
 			if tfValues[name], err = toTerraform5Value(value, typ); err != nil {
 				return tfValues, tftypes.Object{}, err
 			}
@@ -207,20 +209,21 @@ func objectFromTerraform5Value(value tftypes.Value) (*Value, error) {
 		return nil, err
 	}
 
-	values.Object = make(map[string]Value)
+	objectValues := make(map[string]Value)
 	for name, child := range children {
 		parsed, err := fromTerraform5Value(child)
 		if err != nil {
 			return nil, err
 		}
 		if parsed != nil {
-			values.Object[name] = *parsed
+			objectValues[name] = *parsed
 		}
 	}
+	values.Object = &objectValues
 	return &values, nil
 }
 
-func setToTerraform5Value(v []Value, t *types.Type) (interface{}, tftypes.Type, error) {
+func setToTerraform5Value(v *[]Value, t *types.Type) (interface{}, tftypes.Type, error) {
 	tfType, err := t.ToTerraform5Type()
 	if err != nil {
 		return nil, tftypes.Set{}, err
@@ -231,7 +234,7 @@ func setToTerraform5Value(v []Value, t *types.Type) (interface{}, tftypes.Type, 
 	}
 
 	var children []tftypes.Value
-	for _, value := range v {
+	for _, value := range *v {
 		child, err := toTerraform5Value(value, t.ElementType)
 		if err != nil {
 			return children, tfType, err
@@ -249,13 +252,14 @@ func setFromTerraform5Value(value tftypes.Value) (*Value, error) {
 		return nil, err
 	}
 
-	values.Set = []Value{}
+	set := []Value{}
 	for _, child := range children {
 		parsed, err := fromTerraform5Value(child)
 		if err != nil {
 			return nil, err
 		}
-		values.Set = append(values.Set, *parsed)
+		set = append(set, *parsed)
 	}
+	values.Set = &set
 	return &values, nil
 }

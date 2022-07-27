@@ -15,12 +15,12 @@ import (
 var _ tfsdk.ResourceType = dynamicResourceType{}
 
 type dynamicResourceType struct {
-	Object dynamic.Attribute
+	Resource dynamic.Resource
 }
 
 func (t dynamicResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	tflog.Trace(ctx, "dynamicResourceType.GetSchema")
-	return t.Object.ToTerraformSchema(true)
+	return t.Resource.ToTerraformSchema(true)
 }
 
 func (t dynamicResourceType) NewResource(ctx context.Context, in tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {

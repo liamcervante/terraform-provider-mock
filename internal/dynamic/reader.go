@@ -6,7 +6,7 @@ import (
 )
 
 type Reader interface {
-	Read() (map[string]Attribute, error)
+	Read() (map[string]Resource, error)
 }
 
 type FileReader struct {
@@ -17,7 +17,7 @@ type StringReader struct {
 	Data string
 }
 
-func (r FileReader) Read() (map[string]Attribute, error) {
+func (r FileReader) Read() (map[string]Resource, error) {
 	data, err := os.ReadFile("dynamic_resources.json")
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -26,7 +26,7 @@ func (r FileReader) Read() (map[string]Attribute, error) {
 		return nil, err
 	}
 
-	var dynamicResources map[string]Attribute
+	var dynamicResources map[string]Resource
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &dynamicResources); err != nil {
 			return nil, err
@@ -36,8 +36,8 @@ func (r FileReader) Read() (map[string]Attribute, error) {
 	return dynamicResources, nil
 }
 
-func (r StringReader) Read() (map[string]Attribute, error) {
-	var dynamicResources map[string]Attribute
+func (r StringReader) Read() (map[string]Resource, error) {
+	var dynamicResources map[string]Resource
 	if len(r.Data) > 0 {
 		if err := json.Unmarshal([]byte(r.Data), &dynamicResources); err != nil {
 			return nil, err

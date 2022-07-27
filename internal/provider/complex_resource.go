@@ -19,8 +19,8 @@ func (t complexResourceType) GetSchema(ctx context.Context) (tfsdk.Schema, diag.
 	tflog.Trace(ctx, "complexResourceType.GetSchema")
 
 	return tfsdk.Schema{
-		Attributes: complex.Attributes(1),
-		Blocks:     complex.Blocks(1),
+		Attributes: complex.Attributes(3),
+		Blocks:     complex.Blocks(3),
 	}, nil
 }
 

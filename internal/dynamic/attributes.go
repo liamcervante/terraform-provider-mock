@@ -3,11 +3,8 @@ package dynamic
 import (
 	"errors"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-
 	"github.com/liamcervante/terraform-provider-fakelocal/internal/types"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	tftypes "github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -94,77 +91,29 @@ func (a Attribute) ToTerraformAttribute() (tfsdk.Attribute, error) {
 			},
 		}, nil
 	case types.Object:
-		attributes, err := a.ObjectToTerraformAttribute()
+		attributes, err := attributesToTerraformAttributes(a.Object)
 		if err != nil {
 			return tfsdk.Attribute{}, err
 		}
 
-		attrTypes := make(map[string]attr.Type)
-		for name, attribute := range attributes {
-			attrTypes[name] = attribute.Type
-		}
-
 		return tfsdk.Attribute{
-			Optional: a.Optional,
-			Required: !a.Optional,
-			Type: tftypes.ObjectType{
-				AttrTypes: attrTypes,
-			},
+			Optional:   a.Optional,
+			Required:   !a.Optional,
+			Attributes: tfsdk.SingleNestedAttributes(attributes),
 		}, nil
 	default:
 		return tfsdk.Attribute{}, errors.New("unrecognized attribute type: " + a.Type)
 	}
 }
 
-func (a Attribute) ObjectToTerraformAttribute() (map[string]tfsdk.Attribute, error) {
-	attributes := make(map[string]tfsdk.Attribute)
-	for name, attribute := range a.Object {
+func attributesToTerraformAttributes(attributes map[string]Attribute) (map[string]tfsdk.Attribute, error) {
+	tfAttributes := make(map[string]tfsdk.Attribute)
+	for name, attribute := range attributes {
 		tfAttribute, err := attribute.ToTerraformAttribute()
 		if err != nil {
 			return nil, err
 		}
-		attributes[name] = tfAttribute
+		tfAttributes[name] = tfAttribute
 	}
-	return attributes, nil
-}
-
-func (a Attribute) ToTerraformSchema(computed bool) (tfsdk.Schema, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if a.Type != types.Object {
-		diags.AddError(
-			"Invalid attribute type",
-			"You can only turn objects into terraform schemas")
-
-		return tfsdk.Schema{}, diags
-	}
-
-	if _, ok := a.Object["id"]; ok {
-		diags.AddError(
-			"Found `id` value in top level object",
-			"Top level dynamic objects cannot define a value called `id` as the provider will generate an ID for them.",
-		)
-
-		return tfsdk.Schema{}, diags
-	}
-
-	attributes, err := a.ObjectToTerraformAttribute()
-	if err != nil {
-		diags.AddError("Failed to parse dynamic attributes", err.Error())
-	}
-
-	attributes["id"] = tfsdk.Attribute{
-		Required: !computed,
-		Optional: computed,
-		Computed: computed,
-		PlanModifiers: tfsdk.AttributePlanModifiers{
-			tfsdk.UseStateForUnknown(),
-			tfsdk.RequiresReplace(),
-		},
-		Type: tftypes.StringType,
-	}
-
-	return tfsdk.Schema{
-		Attributes: attributes,
-	}, diags
+	return tfAttributes, nil
 }

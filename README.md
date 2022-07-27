@@ -63,7 +63,7 @@ If, for any reason, the static resources do not provide enough cover for a parti
 
 The provider looks for a file called `dynamic_resources.json` in the same directory as the terraform definitions, and will add resources based on the definitions in this file.
 
-The provider automatically installs an `id` attribute into every dynamic resource. You can specify
+The provider automatically installs an `id` attribute into every dynamic resource.
 
 ### Example
 

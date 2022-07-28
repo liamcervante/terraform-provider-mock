@@ -12,7 +12,7 @@ var _ tftypes.ValueConverter = &Resource{}
 var _ tftypes.ValueCreator = &Resource{}
 
 type Resource struct {
-	Types  map[string]*types.Type `tfsdk:"types" json:"types"`
+	Types  map[string]*types.Type `tfsdk:"types" json:"-"`
 	Values map[string]Value       `tfsdk:"values" json:"values"`
 }
 
@@ -37,10 +37,6 @@ func (r Resource) Type() *types.Type {
 
 func (r *Resource) ToTerraform5Value() (interface{}, error) {
 	value, _, err := objectToTerraform5Value(&r.Values, r.Type())
-
-	//fmt.Printf("ToTerraform5Value\n")
-	//fmt.Printf("FROM\n\t%v\n", toJSON(r.Values))
-	//fmt.Printf("TO\n\t%v\n\n", tftypes.NewValue(typ, value))
 	return value, err
 }
 
@@ -60,17 +56,5 @@ func (r *Resource) FromTerraform5Value(value tftypes.Value) error {
 	r.Values = *values.Object
 	r.Types = typ.ObjectType
 
-	//fmt.Printf("FromTerraform5Value\n")
-	//fmt.Printf("FROM\n\t%v\n", value)
-	//fmt.Printf("TO\n\t%v\n\n", toJSON(r.Values))
-
 	return nil
 }
-
-//func toJSON(obj map[string]Value) string {
-//	data, err := json.Marshal(obj)
-//	if err != nil {
-//		panic(err)
-//	}
-//	return string(data)
-//}

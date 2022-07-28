@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/liamcervante/terraform-provider-mock/internal/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -50,6 +51,13 @@ func (d DataSource) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, r
 		resp.Diagnostics.Append(diag.NewErrorDiagnostic("target data source does not exist", fmt.Sprintf("data source at %s could not be found in data directory (%s)", id, d.Client.DataDirectory)))
 		return
 	}
+
+	typ, err := types.FromTerraform5Type(req.Config.Schema.TerraformType(ctx))
+	if err != nil {
+		resp.Diagnostics.Append(diag.NewErrorDiagnostic("internal error", err.Error()))
+		return
+	}
+	data.Types = typ.ObjectType
 
 	diags = resp.State.Set(ctx, data)
 	resp.Diagnostics.Append(diags...)

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/liamcervante/terraform-provider-mock/internal/types"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -89,6 +90,13 @@ func (r Resource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp 
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
+	typ, err := types.FromTerraform5Type(req.State.Schema.TerraformType(ctx))
+	if err != nil {
+		resp.Diagnostics.Append(diag.NewErrorDiagnostic("internal error", err.Error()))
+		return
+	}
+	data.Types = typ.ObjectType
 
 	diags = resp.State.Set(ctx, data)
 	resp.Diagnostics.Append(diags...)

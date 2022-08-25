@@ -76,7 +76,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	ctx = tflog.With(ctx, "data_directory", p.client.DataDirectory)
 
 	if data.UseOnlyState.Null {
-		p.useOnlyState = true
+		p.useOnlyState = false
 	} else {
 		p.useOnlyState = data.UseOnlyState.Value
 	}

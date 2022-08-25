@@ -25,3 +25,4 @@ provider "mock" {
 
 - `data_directory` (String)
 - `resource_directory` (String)
+- `use_only_state` (Boolean)

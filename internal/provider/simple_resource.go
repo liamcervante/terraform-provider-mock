@@ -30,6 +30,7 @@ func (t simpleResourceType) NewResource(ctx context.Context, in tfsdk.Provider) 
 	provider, diags := convertProviderType(in)
 
 	return client.Resource{
-		Client: provider.client,
+		Client:       provider.client,
+		UseOnlyState: provider.useOnlyState,
 	}, diags
 }

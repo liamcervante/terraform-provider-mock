@@ -36,12 +36,17 @@ type provider struct {
 	// reader will read the dynamic resource definitions in the GetResources and
 	// GetDataSources functions.
 	reader dynamic.Reader
+
+	// useOnlyState tells the provider to read data from state only, and not
+	// write any of the data to disk.
+	useOnlyState bool
 }
 
 // providerData can be used to store client from the Terraform configuration.
 type providerData struct {
-	ResourceDir types.String `tfsdk:"resource_directory"`
-	DataDir     types.String `tfsdk:"data_directory"`
+	ResourceDir  types.String `tfsdk:"resource_directory"`
+	DataDir      types.String `tfsdk:"data_directory"`
+	UseOnlyState types.Bool   `tfsdk:"use_only_state"`
 }
 
 func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
@@ -69,6 +74,13 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		p.client.DataDirectory = data.DataDir.Value
 	}
 	ctx = tflog.With(ctx, "data_directory", p.client.DataDirectory)
+
+	if data.UseOnlyState.Null {
+		p.useOnlyState = true
+	} else {
+		p.useOnlyState = data.UseOnlyState.Value
+	}
+	ctx = tflog.With(ctx, "use_only_state", p.useOnlyState)
 
 	p.configured = true
 	tflog.Trace(ctx, "provider.Configured = true")
@@ -131,6 +143,10 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"data_directory": {
 				Optional: true,
 				Type:     types.StringType,
+			},
+			"use_only_state": {
+				Optional: true,
+				Type:     types.BoolType,
 			},
 		},
 	}, nil

@@ -17,7 +17,8 @@ var _ tfsdk.Resource = Resource{}
 var _ tfsdk.ResourceWithImportState = Resource{}
 
 type Resource struct {
-	Client Local
+	Client       Local
+	UseOnlyState bool
 }
 
 func (r Resource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
@@ -49,9 +50,12 @@ func (r Resource) Create(ctx context.Context, req tfsdk.CreateResourceRequest, r
 	}
 	ctx = tflog.With(ctx, "id", id)
 
-	if err := r.Client.WriteResource(ctx, id, resource); err != nil {
-		resp.Diagnostics.Append(diag.NewErrorDiagnostic("write error", err.Error()))
-		return
+	// Don't write the resource to disk if we're only using that state.
+	if !r.UseOnlyState {
+		if err := r.Client.WriteResource(ctx, id, resource); err != nil {
+			resp.Diagnostics.Append(diag.NewErrorDiagnostic("write error", err.Error()))
+			return
+		}
 	}
 
 	diags = resp.State.Set(ctx, resource)
@@ -67,6 +71,14 @@ func (r Resource) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp 
 	resp.Diagnostics.Append(diags...)
 
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If we're only using the state then don't try and read this resource from
+	// disk.
+	if r.UseOnlyState {
+		diags = resp.State.Set(ctx, resource)
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 
@@ -113,19 +125,22 @@ func (r Resource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, r
 		return
 	}
 
-	id, err := resource.GetId()
-	if err != nil {
-		resp.Diagnostics.Append(
-			diag.NewAttributeErrorDiagnostic(
-				tftypes.NewAttributePath().WithAttributeName("id"),
-				"failed to retrieve id", err.Error()))
-		return
-	}
-	ctx = tflog.With(ctx, "id", id)
+	// Don't write the updated object to disk if we're only using state.
+	if !r.UseOnlyState {
+		id, err := resource.GetId()
+		if err != nil {
+			resp.Diagnostics.Append(
+				diag.NewAttributeErrorDiagnostic(
+					tftypes.NewAttributePath().WithAttributeName("id"),
+					"failed to retrieve id", err.Error()))
+			return
+		}
+		ctx = tflog.With(ctx, "id", id)
 
-	if err := r.Client.UpdateResource(ctx, id, resource); err != nil {
-		resp.Diagnostics.Append(diag.NewErrorDiagnostic("update error", err.Error()))
-		return
+		if err := r.Client.UpdateResource(ctx, id, resource); err != nil {
+			resp.Diagnostics.Append(diag.NewErrorDiagnostic("update error", err.Error()))
+			return
+		}
 	}
 
 	diags = resp.State.Set(ctx, resource)
@@ -134,6 +149,12 @@ func (r Resource) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, r
 
 func (r Resource) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
 	tflog.Trace(ctx, "Resource.Delete")
+
+	if r.UseOnlyState {
+		// Then we have nothing to do here, nothing to delete and the SDK
+		// removes it from the state automatically.
+		return
+	}
 
 	resource := &values.Resource{}
 	diags := req.State.Get(ctx, &resource)

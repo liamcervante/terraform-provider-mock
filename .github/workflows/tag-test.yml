@@ -1,0 +1,18 @@
+name: test on_push_tags
+
+on:
+  push:
+    tags:
+      - t*
+
+permissions:
+  contents: read
+
+jobs:
+  test-job:
+    name: "Run test job"
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: |
+          echo ${{ github.event.push.ref }}

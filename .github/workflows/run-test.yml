@@ -1,0 +1,22 @@
+name: test workflow_run
+
+on:
+  workflow_run:
+    workflows: [test on_push_tags]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  test-job:
+    name: "Run test job"
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: |
+          echo ${{ github.event.workflow_run }}
+          echo ${{ github.event.workflow }}
+          echo ${{ github.event.workflow_run.head_branch }}
+          echo ${{ github.event.workflow.id }}

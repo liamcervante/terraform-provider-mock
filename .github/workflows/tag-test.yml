@@ -16,3 +16,4 @@ jobs:
     steps:
       - run: |
           echo ${{ github.event.push.ref }}
+          echo $GITHUB_CONTEXT

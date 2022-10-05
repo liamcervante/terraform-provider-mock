@@ -20,3 +20,4 @@ jobs:
           echo ${{ github.event.workflow }}
           echo ${{ github.event.workflow_run.head_branch }}
           echo ${{ github.event.workflow.id }}
+          echo $GITHUB_CONTEXT

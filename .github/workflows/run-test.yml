@@ -15,11 +15,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
       - env:
-          ctx: ${{ toJSON(github) }}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
-          echo ${{ github.event.workflow_run }}
-          echo ${{ github.event.workflow }}
-          echo ${{ github.event.workflow_run.head_branch }}
-          echo ${{ github.event.workflow.id }}
-          echo ${{ env.ctx }}
+          ORIGINAL_REF=${{ github.event.workflow_run.head_branch }}
+          
+          if git show-ref -q --verify refs/tags/$ORIGINAL_REF
+          then
+            echo "it's a tag"
+          fi
+          
+          echo $ORIGINAL_REF
+          echo $GITHUB_CONTEXT

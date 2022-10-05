@@ -15,9 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: |
+      - env:
+          ctx: ${{ toJSON(github) }}
+        run: |
           echo ${{ github.event.workflow_run }}
           echo ${{ github.event.workflow }}
           echo ${{ github.event.workflow_run.head_branch }}
           echo ${{ github.event.workflow.id }}
-          echo $GITHUB_CONTEXT
+          echo ${{ env.ctx }}

@@ -1,3 +1,5 @@
+** This has been replaced by [hashicorp/terraform-provider-tfcoremock](github.com/hashicorp/terraform-provider-tfcoremock), please use that repository/provider **
+
 # terraform-provider-mock
 
 A Terraform provider that can model any Terraform configuration, will write the state to disk, and can be used to reason about state changes and test difficult to reproduce edge cases in terraform.

@@ -1,4 +1,4 @@
-** This has been replaced by [hashicorp/terraform-provider-tfcoremock](github.com/hashicorp/terraform-provider-tfcoremock), please use that repository/provider **
+**This has been replaced by [hashicorp/terraform-provider-tfcoremock](https://github.com/hashicorp/terraform-provider-tfcoremock), please use that repository/provider.**
 
 # terraform-provider-mock
 
